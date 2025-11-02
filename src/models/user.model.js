@@ -5,6 +5,12 @@ import bcrypt from 'bcrypt'
 
 const userSchema = new Schema(
     {
+        fullName :{
+            type : String,
+            required:true,
+            trim:true,
+            index:true
+        },
         username :{
             type : String,
             required:true,
@@ -20,15 +26,18 @@ const userSchema = new Schema(
             lowercase : true,
             trim: true
         },
-        fullName :{
-            type : String,
-            required:true,
-            trim:true,
-            index:true
+        password:{
+            type: String,
+            required: [true, "Password is Required"]
+
         },
-        avtar : {
+        avatar : {
             type:String, // cloudnary url
             required: true,
+        },
+        coverImage : {
+            type:String, // cloudnary url
+            default : ""
         },
         watchHistory: [
             {
@@ -36,11 +45,6 @@ const userSchema = new Schema(
                 ref: "Video"
             }
         ],
-        password:{
-            type: String,
-            required: [true, "Password is Required"]
-
-        },
         refreshToken: {
             type: String
         }
@@ -62,7 +66,7 @@ userSchema.methods.isPasswordCorrect = async function (password){
 userSchema.methods.generateAccessToken = function(){
     return jwt.sign(
         {
-            _id : this.id,
+            _id : this._id,
             email: this.email,
             username : this.username,
             fullName : this.fullName
@@ -76,7 +80,7 @@ userSchema.methods.generateAccessToken = function(){
 userSchema.methods.generateRefreshToken = function(){
      return jwt.sign(
         {
-            _id : this.id,
+            _id : this._id,
            
         },
         process.env.REFRESH_TOKEN_SECRET,{
