@@ -75,7 +75,7 @@ const loginUser = asyncHandler(async (req, res) => {
     // send cookies and response
 
     const { email, username, password } = req.body;
-    if( !email || !username ) {
+    if( !email && !username ) {
         throw new ApiError(400, "username or email is required")
     }
     const user = await User.findOne({
@@ -92,8 +92,8 @@ const loginUser = asyncHandler(async (req, res) => {
     const generateAccessAndRefreshTokens = async (userId) => {
         try {
             const user = await User.findById(userId)
-            user.accessToken = user.generateAccessToken()
-            user.refreshToken = user.generateRefreshToken()
+            const accessToken = user.generateAccessToken()
+            const refreshToken = user.generateRefreshToken()
 
             user.refreshToken = refreshToken
             await user.save({ validateBeforeSave: false })
@@ -114,7 +114,7 @@ const loginUser = asyncHandler(async (req, res) => {
         httpOnly : true,
         secure : true
     }
-    return res.status(200).cookie("accesssToken",accessToken,options).cookie("refreshToken", refreshToken, options).json(
+    return res.status(200).cookie("accessToken",accessToken,options).cookie("refreshToken", refreshToken, options).json(
         new ApiResponse(200, { user: loggedInuser, accessToken , refreshToken }, "User logged in successfully")
     )
 }) 
@@ -123,11 +123,17 @@ const logoutUser = asyncHandler ( async ( req, res) => {
     // logout user controller
     // clear cookies
     // invalidate refresh token in db
-    await User.findbyIdAndUpdate(req.user._id, {
-        $set: { refreshToken: undefined }
-     },{
+    // await User.findbyIdAndUpdate(req.user._id, {
+    //     $set: { refreshToken: undefined }
+    //  },{
+    //     new :true
+    //  })
+        await User.findByIdAndUpdate(req.user._id, {
+        $unset: { refreshToken: 1 }
+        },{
         new :true
-     })
+        })
+        
 
      const options = {
         httpOnly : true,
