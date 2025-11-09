@@ -175,9 +175,80 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         throw new ApiError(401, error?.message || "Invalid refresh token" )
     }
 })
+
+const changePassword = asyncHandler ( async ( req, res) => {
+    // change password controller
+    const {oldPassword, newPassword } = req.body
+    // const {oldPassword, newPassword, confirmPassword} = req.body
+
+    // if(newPassword !== confirmPassword){
+    //     throw new ApiError(400, "New password and confirm password do not match")
+    // }
+
+    const user = await User.findById(req.user?._id)
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+    if(!isPasswordCorrect){
+        throw new ApiError(400, "Old password is incorrect")
+    }
+    user.password = newPassword
+    await user.save({ validateBeforeSave: false })
+
+    return res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"))
+})
+
+const getCurrentUser = asyncHandler( async (req,res) => {
+    return res.status(200).json(200, req.user , "Current user fetched successfully")
+})
+
+const updateDetails = asyncHandler(async (req,res) => {
+   const {fullName, email} =  req.body
+   if([fullName, email].some((field) => field?.trim() === "")){
+    throw new ApiError(400, "All fields are required")
+   }
+    if(!email.includes("@")){
+        throw new ApiError(400, "Invalid email address")
+    }
+    const user = await User.findByIdAndUpdate(req.user._id,
+        { 
+           $set: {
+               fullName,
+               email: email.toLowerCase()
+            } 
+        },
+        { new: true }
+    ).select("-password")
+   
+    return res.status(200).json(new ApiResponse(200, user, "Account details updated successfully"))
+})
+
+const updateAvatar = asyncHandler(async (req,res) => {
+    // update avatar image
+   const avatarLocalPath  = req.file?.path
+    if(!avatarLocalPath){ 
+        throw new ApiError(400, "Avatar image is required")
+    }
+    const avatar = await uploadToCloudinary(avatarLocalPath)
+    if(!avatar.url){
+        throw new ApiError(500, "Unable to upload avatar image")
+    }
+    const user = await User.findByIdAndUpdate(req.user._id,
+        {
+            $set:{
+                avatar: avatar.url
+            }
+        },
+        { new: true }
+    ).select("-password")
+    return res.status(200).json(new ApiResponse(200, user, "Avatar image updated successfully"))
+}) 
+
 export {
     registerUser,
     loginUser,
     logoutUser,
-    refreshAccessToken
+    refreshAccessToken,
+    changePassword,
+    getCurrentUser,
+    updateDetails,
+    updateAvatar
 }
