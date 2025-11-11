@@ -130,11 +130,14 @@ const logoutUser = asyncHandler ( async ( req, res) => {
     //  },{
     //     new :true
     //  })
-        await User.findByIdAndUpdate(req.user._id, {
-        $unset: { refreshToken: 1 }
-        },{
-        new :true
-        })
+        await User.findByIdAndUpdate(req.user._id, 
+            {
+              $unset: { refreshToken: 1 }
+            },
+            {
+               new :true
+            }
+    )
 
 
      const options = {
