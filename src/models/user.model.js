@@ -31,11 +31,11 @@ const userSchema = new Schema(
 
         },
         avatar : {
-            type:String, // cloudnary url
+            type:String,
             required: true,
         },
         coverImage : {
-            type:String, // cloudnary url
+            type:String,
             default : ""
         },
         watchHistory: [
